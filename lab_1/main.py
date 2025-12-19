@@ -1,13 +1,12 @@
 import math
-
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.interpolate import CubicSpline
+from scipy.interpolate import CubicSpline, lagrange
 
 
-x = [i * 0.1 for i in range(1, 21)]
-y = [0.17, 0.07, 0.17, 0.05, 0.12, 0.00, 0.01, -0.05, -0.21, -0.50,
-     -0.50, -0.86, -1.24, -1.47, -1.79, -2.25, -2.55, -3.18, -3.60, -3.93]
+x_data = [i * 0.1 for i in range(1, 21)]
+y_data = [0.17, 0.07, 0.17, 0.05, 0.12, 0.00, 0.01, -0.05, -0.21, -0.50,
+          -0.50, -0.86, -1.24, -1.47, -1.79, -2.25, -2.55, -3.18, -3.60, -3.93]
 
 
 def lagrange_interp(x, y, xq):
@@ -33,11 +32,11 @@ def progonka(a, b, c, d):
         if i < n - 1:
             u[i] = -c[i] / denom
         v[i] = (d[i] - a[i] * v[i - 1]) / denom
-    x = [0] * n
-    x[-1] = v[-1]
+    res_x = [0] * n
+    res_x[-1] = v[-1]
     for i in range(n - 2, -1, -1):
-        x[i] = u[i] * x[i + 1] + v[i]
-    return x
+        res_x[i] = u[i] * res_x[i + 1] + v[i]
+    return res_x
 
 
 def spline_interp(x, y, xq):
@@ -55,14 +54,14 @@ def spline_interp(x, y, xq):
     b[0] = b[-1] = 1
     d[0] = d[-1] = 0
     c[0] = a[-1] = 0
-    M = progonka(a, b, c, d)
+    m_coeffs = progonka(a, b, c, d)
     for i in range(1, n):
         if xq <= x[i]:
             hi = x[i] - x[i - 1]
-            A = (x[i] - xq) / hi
-            B = (xq - x[i - 1]) / hi
-            s = (A * y[i - 1] + B * y[i] +
-                 ((A ** 3 - A) * M[i - 1] + (B ** 3 - B) * M[i]) *
+            alpha = (x[i] - xq) / hi
+            beta = (xq - x[i - 1]) / hi
+            s = (alpha * y[i - 1] + beta * y[i] +
+                 ((alpha ** 3 - alpha) * m_coeffs[i - 1] + (beta ** 3 - beta) * m_coeffs[i]) *
                  (hi ** 2) / 6)
             return s
     return y[-1]
@@ -94,32 +93,32 @@ def mnk_quadratic(x, y, xq):
     sy = sum(y)
     sxy = sum(x[i] * y[i] for i in range(n))
     sx2y = sum((x[i] ** 2) * y[i] for i in range(n))
-    A = [[n, sx, sx2],
-         [sx, sx2, sx3],
-         [sx2, sx3, sx4]]
-    B = [sy, sxy, sx2y]
+    mat_a = [[n, sx, sx2],
+             [sx, sx2, sx3],
+             [sx2, sx3, sx4]]
+    vec_b = [sy, sxy, sx2y]
 
-    def gauss(A, B):
-        n = len(B)
-        for i in range(n):
+    def gauss(a_in, b_in):
+        n_size = len(b_in)
+        for i in range(n_size):
             max_row = i
-            for j in range(i + 1, n):
-                if abs(A[j][i]) > abs(A[max_row][i]):
+            for j in range(i + 1, n_size):
+                if abs(a_in[j][i]) > abs(a_in[max_row][i]):
                     max_row = j
-            A[i], A[max_row] = A[max_row], A[i]
-            B[i], B[max_row] = B[max_row], B[i]
-            for j in range(i + 1, n):
-                ratio = A[j][i] / A[i][i]
-                for k in range(i, n):
-                    A[j][k] -= ratio * A[i][k]
-                B[j] -= ratio * B[i]
-        x = [0 for _ in range(n)]
-        for i in range(n - 1, -1, -1):
-            x[i] = (B[i] - sum(A[i][j] * x[j] for j in range(i + 1, n))) / \
-                A[i][i]
-        return x
+            a_in[i], a_in[max_row] = a_in[max_row], a_in[i]
+            b_in[i], b_in[max_row] = b_in[max_row], b_in[i]
+            for j in range(i + 1, n_size):
+                ratio = a_in[j][i] / a_in[i][i]
+                for k in range(i, n_size):
+                    a_in[j][k] -= ratio * a_in[i][k]
+                b_in[j] -= ratio * b_in[i]
+        res_x = [0 for _ in range(n_size)]
+        for i in range(n_size - 1, -1, -1):
+            res_x[i] = (b_in[i] - sum(a_in[i][j] * res_x[j] for j in range(i + 1, n_size))) / \
+                a_in[i][i]
+        return res_x
 
-    c0, c1, c2 = gauss(A, B)
+    c0, c1, c2 = gauss(mat_a, vec_b)
     return c0 + c1 * xq + c2 * (xq ** 2), (c0, c1, c2)
 
 
@@ -128,11 +127,11 @@ def print_table(title, func):
     print("=" * len(title))
     print(f"{'x':>6} {'y(x)':>12}")
     for xi in np.arange(0.1, 2.01, 0.1):
-        yi = func(x, y, xi)
+        yi = func(x_data, y_data, xi)
         print(f"{xi:6.2f} {yi:12.5f}")
     print("\n--- Интерполяция между точками ---")
     for xi in np.arange(0.15, 1.96, 0.2):
-        yi = func(x, y, xi)
+        yi = func(x_data, y_data, xi)
         print(f"{xi:6.2f} {yi:12.5f}")
 
 
@@ -191,38 +190,38 @@ print_table("Интерполяция полиномом Ньютона", newton
 print_table("Аппроксимация методом наименьших квадратов",
             lambda x, y, xi: mnk_quadratic(x, y, xi)[0])
 
-_, (c0, c1, c2) = mnk_quadratic(x, y, 0)
-print(f"\nКоэффициенты МНК: c0 = {c0:.6f}, c1 = {c1:.6f}, c2 = {c2:.6f}")
+_, (coeff_0, coeff_1, coeff_2) = mnk_quadratic(x_data, y_data, 0)
+print(f"\nКоэффициенты МНК: c0 = {coeff_0:.6f}, c1 = {coeff_1:.6f}, c2 = {coeff_2:.6f}")
 
 
-xq = np.linspace(0.1, 2.0, 300)
+xq_vals = np.linspace(0.1, 2.0, 300)
 
-lag_sci = lagrange(x, y)
-spl_sci = CubicSpline(x, y)
-coef_mnk = np.polyfit(x, y, 2)
+lag_sci = lagrange(x_data, y_data)
+spl_sci = CubicSpline(x_data, y_data)
+coef_mnk = np.polyfit(x_data, y_data, 2)
 
 methods = {
-    "Полином Лагранжа": [lambda xi: lagrange_interp(x, y, xi),
+    "Полином Лагранжа": [lambda xi: lagrange_interp(x_data, y_data, xi),
                          lambda xi: lag_sci(xi), 'r'],
-    "Кубический сплайн": [lambda xi: spline_interp(x, y, xi),
+    "Кубический сплайн": [lambda xi: spline_interp(x_data, y_data, xi),
                           lambda xi: spl_sci(xi), 'b'],
-    "Полином Ньютона": [lambda xi: newton_interp(x, y, xi),
+    "Полином Ньютона": [lambda xi: newton_interp(x_data, y_data, xi),
                         None, 'g'],
     "МНК (квадратичная аппроксимация)": [
-        lambda xi: mnk_quadratic(x, y, xi)[0],
+        lambda xi: mnk_quadratic(x_data, y_data, xi)[0],
         lambda xi: np.polyval(coef_mnk, xi), 'm'
     ]
 }
 
 for name, (manual, builtin, color) in methods.items():
-    y_manual = [manual(xi) for xi in xq]
-    y_builtin = [builtin(xi) for xi in xq] if builtin else None
+    y_manual = [manual(xi) for xi in xq_vals]
+    y_builtin = [builtin(xi) for xi in xq_vals] if builtin else None
 
     plt.figure(figsize=(10, 6))
-    plt.scatter(x, y, color='black', label='Исходные точки', zorder=5, s=40)
-    plt.plot(xq, y_manual, color=color, linewidth=2, label=f'{name} (ручной)')
+    plt.scatter(x_data, y_data, color='black', label='Исходные точки', zorder=5, s=40)
+    plt.plot(xq_vals, y_manual, color=color, linewidth=2, label=f'{name} (ручной)')
     if builtin:
-        plt.plot(xq, y_builtin, color=color, linestyle='--',
+        plt.plot(xq_vals, y_builtin, color=color, linestyle='--',
                  linewidth=1.5, label=f'{name} (встроенный)')
     plt.title(name)
     plt.xlabel("x")
@@ -233,80 +232,80 @@ for name, (manual, builtin, color) in methods.items():
 
 if __name__ == "__main__":
 
-    def f(x):
+    def func_f(x):
         return math.cos(x + x**3)
 
-    def fx(x):
+    def func_fx(x):
         return -math.sin(x + x**3) * (1 + 3 * x**2)
 
-    def fxx(x):
+    def func_fxx(x):
         return (
             -math.cos(x + x**3) * (1 + 3 * x**2)**2
             - math.sin(x + x**3) * (6 * x)
         )
 
-    a, b, m = 0, 1, 15
-    x = np.linspace(a, b, m)
-    y = np.array([f(xi) for xi in x])
+    val_a, val_b, val_m = 0, 1, 15
+    x_nodes = np.linspace(val_a, val_b, val_m)
+    y_nodes = np.array([func_f(xi) for xi in x_nodes])
 
     print(" i      x_i             y_i")
-    for i, (xi, yi) in enumerate(zip(x, y)):
-        print(f"{i:2d} | {xi:10.6f} | {yi:12.6f}")
+    for idx, (xi, yi) in enumerate(zip(x_nodes, y_nodes)):
+        print(f"{idx:2d} | {xi:10.6f} | {yi:12.6f}")
     print()
 
-    coeffs = spline3_fixed(x, y)
-    xx = 0.55
-    s1, s2 = dif_spline_fixed(x, coeffs, xx)
+    spline_coeffs = spline3_fixed(x_nodes, y_nodes)
+    target_x = 0.55
+    res_s1, res_s2 = dif_spline_fixed(x_nodes, spline_coeffs, target_x)
 
-    cs = CubicSpline(x, y, bc_type='natural')
-    s1_builtin = cs(xx, 1)
-    s2_builtin = cs(xx, 2)
+    cs_sci = CubicSpline(x_nodes, y_nodes, bc_type='natural')
+    s1_builtin = cs_sci(target_x, 1)
+    s2_builtin = cs_sci(target_x, 2)
 
-    fx_real = fx(xx)
-    fxx_real = fxx(xx)
+    fx_real = func_fx(target_x)
+    fxx_real = func_fxx(target_x)
 
-    print(f"x = {xx}")
+    print(f"x = {target_x}")
     print("------ Сравнение ------")
-    print(f"Наша реализация:     f'(x) = {s1:.6f}, f''(x) = {s2:.6f}")
+    print(f"Наша реализация:     f'(x) = {res_s1:.6f}, f''(x) = {res_s2:.6f}")
     print(f"SciPy CubicSpline:   f'(x) = {s1_builtin:.6f}, "
           f"f''(x) = {s2_builtin:.6f}")
     print(f"Аналитически:        f'(x) = {fx_real:.6f}, "
           f"f''(x) = {fxx_real:.6f}")
 
     print("\nПогрешности:")
-    print(f"Δf'(x): {abs(s1 - fx_real):.6e}")
-    print(f"Δf''(x): {abs(s2 - fxx_real):.6e}")
+    print(f"Δf'(x): {abs(res_s1 - fx_real):.6e}")
+    print(f"Δf''(x): {abs(res_s2 - fxx_real):.6e}")
 
-    xs = np.linspace(a, b, 300)
-    ys = [f(xi) for xi in xs]
-    dydx = [fx(xi) for xi in xs]
-    d2ydx2 = [fxx(xi) for xi in xs]
+    xs_plot = np.linspace(val_a, val_b, 300)
+    ys_plot = [func_f(xi) for xi in xs_plot]
+    dydx_plot = [func_fx(xi) for xi in xs_plot]
+    d2ydx2_plot = [func_fxx(xi) for xi in xs_plot]
 
-    ys_spline = cs(xs)
-    dydx_spline = cs(xs, 1)
-    d2ydx2_spline = cs(xs, 2)
+    ys_spline = cs_sci(xs_plot)
+    dydx_spline = cs_sci(xs_plot, 1)
+    d2ydx2_spline = cs_sci(xs_plot, 2)
 
     plt.figure(figsize=(10, 7))
 
     plt.subplot(3, 1, 1)
     plt.title("Численное дифференцирование: f(x) = cos(x + x³)")
-    plt.plot(xs, ys, label="f(x)")
-    plt.plot(xs, ys_spline, '--', label="Сплайн SciPy")
-    plt.scatter(x, y, color='black', s=20)
+    plt.plot(xs_plot, ys_plot, label="f(x)")
+    plt.plot(xs_plot, ys_spline, '--', label="Сплайн SciPy")
+    plt.scatter(x_nodes, y_nodes, color='black', s=20)
     plt.legend()
     plt.grid()
 
     plt.subplot(3, 1, 2)
-    plt.plot(xs, dydx, label="f'(x) аналитически")
-    plt.plot(xs, dydx_spline, '--', label="f'(x) сплайн")
-    plt.axvline(xx, color='gray', linestyle='--')
+    plt.plot(xs_plot, dydx_plot, label="f'(x) аналитически")
+    plt.plot(xs_plot, dydx_spline, '--', label="f'(x) сплайн")
+    plt.axvline(target_x, color='gray', linestyle='--')
     plt.legend()
     plt.grid()
 
     plt.subplot(3, 1, 3)
-    plt.plot(xs, d2ydx2, label="f''(x) аналитически")
-    plt.plot(xs, d2ydx2_spline, '--', label="f''(x) сплайн")
-    plt.axvline(xx, color='gray', linestyle='--')
+    plt.plot(xs_plot, d2ydx2_plot, label="f''(x) аналитически")
+    plt.plot(xs_plot, d2ydx2_spline, '--', label="f''(x) сплайн")
+    plt.axvline(target_x, color='gray', linestyle='--')
     plt.legend()
     plt.grid()
 
