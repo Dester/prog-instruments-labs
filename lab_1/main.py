@@ -153,9 +153,9 @@ methods = {
     "Кубический сплайн": [lambda xi: spline_interp(x, y, xi),
                           lambda xi: spl_sci(xi), 'b'],
     "Полином Ньютона": [lambda xi: newton_interp(x, y, xi),
-                         None, 'g'],
+                        None, 'g'],
     "МНК (квадратичная аппроксимация)": [lambda xi: mnk_quadratic(x, y, xi)[0],
-                                          lambda xi: np.polyval(coef_mnk, xi), 'm']
+                                         lambda xi: np.polyval(coef_mnk, xi), 'm']
 }
 
 for name, (manual, builtin, color) in methods.items():
