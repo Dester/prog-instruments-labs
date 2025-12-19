@@ -132,49 +132,6 @@ def print_table(title, func):
         print(f"{xi:6.2f} {yi:12.5f}")
 
 
-print_table("Интерполяция полиномом Лагранжа", lagrange_interp)
-print_table("Интерполяция кубическим сплайном", spline_interp)
-print_table("Интерполяция полиномом Ньютона", newton_interp)
-print_table("Аппроксимация методом наименьших квадратов", lambda x, y, xi: mnk_quadratic(x, y, xi)[0])
-
-_, (c0, c1, c2) = mnk_quadratic(x, y, 0)
-print(f"\nКоэффициенты МНК: c0 = {c0:.6f}, c1 = {c1:.6f}, c2 = {c2:.6f}")
-
-
-xq = np.linspace(0.1, 2.0, 300)
-
-lag_sci = lagrange(x, y)
-spl_sci = CubicSpline(x, y)
-coef_mnk = np.polyfit(x, y, 2)
-
-methods = {
-    "Полином Лагранжа": [lambda xi: lagrange_interp(x, y, xi),
-                         lambda xi: lag_sci(xi), 'r'],
-    "Кубический сплайн": [lambda xi: spline_interp(x, y, xi),
-                          lambda xi: spl_sci(xi), 'b'],
-    "Полином Ньютона": [lambda xi: newton_interp(x, y, xi),
-                        None, 'g'],
-    "МНК (квадратичная аппроксимация)": [lambda xi: mnk_quadratic(x, y, xi)[0],
-                                         lambda xi: np.polyval(coef_mnk, xi), 'm']
-}
-
-for name, (manual, builtin, color) in methods.items():
-    y_manual = [manual(xi) for xi in xq]
-    y_builtin = [builtin(xi) for xi in xq] if builtin else None
-
-    plt.figure(figsize=(10, 6))
-    plt.scatter(x, y, color='black', label='Исходные точки', zorder=5, s=40)
-    plt.plot(xq, y_manual, color=color, linewidth=2, label=f'{name} (ручной)')
-    if builtin:
-        plt.plot(xq, y_builtin, color=color, linestyle='--', linewidth=1.5, label=f'{name} (встроенный)')
-    plt.title(name)
-    plt.xlabel("x")
-    plt.ylabel("y")
-    plt.legend()
-    plt.grid(True)
-    plt.show()
-
-
 def spline3_fixed(x, y):
     n = len(x)
     h = np.diff(x)
@@ -222,6 +179,48 @@ def dif_spline_fixed(x, coeffs, xx):
     f2 = 2 * c[i] + 6 * d[i] * dx
     return f1, f2
 
+
+print_table("Интерполяция полиномом Лагранжа", lagrange_interp)
+print_table("Интерполяция кубическим сплайном", spline_interp)
+print_table("Интерполяция полиномом Ньютона", newton_interp)
+print_table("Аппроксимация методом наименьших квадратов", lambda x, y, xi: mnk_quadratic(x, y, xi)[0])
+
+_, (c0, c1, c2) = mnk_quadratic(x, y, 0)
+print(f"\nКоэффициенты МНК: c0 = {c0:.6f}, c1 = {c1:.6f}, c2 = {c2:.6f}")
+
+
+xq = np.linspace(0.1, 2.0, 300)
+
+lag_sci = lagrange(x, y)
+spl_sci = CubicSpline(x, y)
+coef_mnk = np.polyfit(x, y, 2)
+
+methods = {
+    "Полином Лагранжа": [lambda xi: lagrange_interp(x, y, xi),
+                         lambda xi: lag_sci(xi), 'r'],
+    "Кубический сплайн": [lambda xi: spline_interp(x, y, xi),
+                          lambda xi: spl_sci(xi), 'b'],
+    "Полином Ньютона": [lambda xi: newton_interp(x, y, xi),
+                        None, 'g'],
+    "МНК (квадратичная аппроксимация)": [lambda xi: mnk_quadratic(x, y, xi)[0],
+                                         lambda xi: np.polyval(coef_mnk, xi), 'm']
+}
+
+for name, (manual, builtin, color) in methods.items():
+    y_manual = [manual(xi) for xi in xq]
+    y_builtin = [builtin(xi) for xi in xq] if builtin else None
+
+    plt.figure(figsize=(10, 6))
+    plt.scatter(x, y, color='black', label='Исходные точки', zorder=5, s=40)
+    plt.plot(xq, y_manual, color=color, linewidth=2, label=f'{name} (ручной)')
+    if builtin:
+        plt.plot(xq, y_builtin, color=color, linestyle='--', linewidth=1.5, label=f'{name} (встроенный)')
+    plt.title(name)
+    plt.xlabel("x")
+    plt.ylabel("y")
+    plt.legend()
+    plt.grid(True)
+    plt.show()
 
 if __name__ == "__main__":
 
