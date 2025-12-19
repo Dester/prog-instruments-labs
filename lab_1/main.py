@@ -61,7 +61,9 @@ def spline_interp(x, y, xq):
             hi = x[i] - x[i - 1]
             A = (x[i] - xq) / hi
             B = (xq - x[i - 1]) / hi
-            s = A * y[i - 1] + B * y[i] + ((A ** 3 - A) * M[i - 1] + (B ** 3 - B) * M[i]) * (hi ** 2) / 6
+            s = (A * y[i - 1] + B * y[i] +
+                 ((A ** 3 - A) * M[i - 1] + (B ** 3 - B) * M[i]) *
+                 (hi ** 2) / 6)
             return s
     return y[-1]
 
@@ -113,7 +115,8 @@ def mnk_quadratic(x, y, xq):
                 B[j] -= ratio * B[i]
         x = [0 for _ in range(n)]
         for i in range(n - 1, -1, -1):
-            x[i] = (B[i] - sum(A[i][j] * x[j] for j in range(i + 1, n))) / A[i][i]
+            x[i] = (B[i] - sum(A[i][j] * x[j] for j in range(i + 1, n))) / \
+                A[i][i]
         return x
 
     c0, c1, c2 = gauss(A, B)
@@ -139,7 +142,8 @@ def spline3_fixed(x, y):
     alpha = np.zeros(n)
 
     for i in range(1, n - 1):
-        alpha[i] = (3 / h[i]) * (y[i + 1] - y[i]) - (3 / h[i - 1]) * (y[i] - y[i - 1])
+        alpha[i] = (3 / h[i]) * (y[i + 1] - y[i]) - \
+            (3 / h[i - 1]) * (y[i] - y[i - 1])
 
     l_arr = np.ones(n)
     mu = np.zeros(n)
@@ -184,7 +188,8 @@ def dif_spline_fixed(x, coeffs, xx):
 print_table("Интерполяция полиномом Лагранжа", lagrange_interp)
 print_table("Интерполяция кубическим сплайном", spline_interp)
 print_table("Интерполяция полиномом Ньютона", newton_interp)
-print_table("Аппроксимация методом наименьших квадратов", lambda x, y, xi: mnk_quadratic(x, y, xi)[0])
+print_table("Аппроксимация методом наименьших квадратов",
+            lambda x, y, xi: mnk_quadratic(x, y, xi)[0])
 
 _, (c0, c1, c2) = mnk_quadratic(x, y, 0)
 print(f"\nКоэффициенты МНК: c0 = {c0:.6f}, c1 = {c1:.6f}, c2 = {c2:.6f}")
@@ -203,8 +208,10 @@ methods = {
                           lambda xi: spl_sci(xi), 'b'],
     "Полином Ньютона": [lambda xi: newton_interp(x, y, xi),
                         None, 'g'],
-    "МНК (квадратичная аппроксимация)": [lambda xi: mnk_quadratic(x, y, xi)[0],
-                                         lambda xi: np.polyval(coef_mnk, xi), 'm']
+    "МНК (квадратичная аппроксимация)": [
+        lambda xi: mnk_quadratic(x, y, xi)[0],
+        lambda xi: np.polyval(coef_mnk, xi), 'm'
+    ]
 }
 
 for name, (manual, builtin, color) in methods.items():
@@ -215,7 +222,8 @@ for name, (manual, builtin, color) in methods.items():
     plt.scatter(x, y, color='black', label='Исходные точки', zorder=5, s=40)
     plt.plot(xq, y_manual, color=color, linewidth=2, label=f'{name} (ручной)')
     if builtin:
-        plt.plot(xq, y_builtin, color=color, linestyle='--', linewidth=1.5, label=f'{name} (встроенный)')
+        plt.plot(xq, y_builtin, color=color, linestyle='--',
+                 linewidth=1.5, label=f'{name} (встроенный)')
     plt.title(name)
     plt.xlabel("x")
     plt.ylabel("y")
@@ -260,8 +268,10 @@ if __name__ == "__main__":
     print(f"x = {xx}")
     print("------ Сравнение ------")
     print(f"Наша реализация:     f'(x) = {s1:.6f}, f''(x) = {s2:.6f}")
-    print(f"SciPy CubicSpline:   f'(x) = {s1_builtin:.6f}, f''(x) = {s2_builtin:.6f}")
-    print(f"Аналитически:        f'(x) = {fx_real:.6f}, f''(x) = {fxx_real:.6f}")
+    print(f"SciPy CubicSpline:   f'(x) = {s1_builtin:.6f}, "
+          f"f''(x) = {s2_builtin:.6f}")
+    print(f"Аналитически:        f'(x) = {fx_real:.6f}, "
+          f"f''(x) = {fxx_real:.6f}")
 
     print("\nПогрешности:")
     print(f"Δf'(x): {abs(s1 - fx_real):.6e}")
