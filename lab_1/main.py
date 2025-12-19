@@ -141,16 +141,16 @@ def spline3_fixed(x, y):
     for i in range(1, n - 1):
         alpha[i] = (3 / h[i]) * (y[i + 1] - y[i]) - (3 / h[i - 1]) * (y[i] - y[i - 1])
 
-    l = np.ones(n)
+    l_arr = np.ones(n)
     mu = np.zeros(n)
     z = np.zeros(n)
 
     for i in range(1, n - 1):
-        l[i] = 2 * (x[i + 1] - x[i - 1]) - h[i - 1] * mu[i - 1]
-        mu[i] = h[i] / l[i]
-        z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l[i]
+        l_arr[i] = 2 * (x[i + 1] - x[i - 1]) - h[i - 1] * mu[i - 1]
+        mu[i] = h[i] / l_arr[i]
+        z[i] = (alpha[i] - h[i - 1] * z[i - 1]) / l_arr[i]
 
-    l[-1] = 1
+    l_arr[-1] = 1
     z[-1] = 0
 
     c = np.zeros(n)
