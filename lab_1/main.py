@@ -1,11 +1,11 @@
 import math
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 from scipy.interpolate import CubicSpline, lagrange
 
 
-x_data = [i * 0.1 for i in range(1, 21)]
-y_data = [0.17, 0.07, 0.17, 0.05, 0.12, 0.00, 0.01, -0.05, -0.21, -0.50,
+X_DATA = [i * 0.1 for i in range(1, 21)]
+Y_DATA = [0.17, 0.07, 0.17, 0.05, 0.12, 0.00, 0.01, -0.05, -0.21, -0.50,
           -0.50, -0.86, -1.24, -1.47, -1.79, -2.25, -2.55, -3.18, -3.60, -3.93]
 
 
@@ -21,7 +21,7 @@ def lagrange_interp(x, y, xq):
     return s
 
 
-def progonka(a, b, c, d):
+def run_through(a, b, c, d):
     n = len(b)
     u = [0] * n
     v = [0] * n
@@ -54,7 +54,7 @@ def spline_interp(x, y, xq):
     b[0] = b[-1] = 1
     d[0] = d[-1] = 0
     c[0] = a[-1] = 0
-    m_coeffs = progonka(a, b, c, d)
+    m_coeffs = run_through(a, b, c, d)
     for i in range(1, n):
         if xq <= x[i]:
             hi = x[i] - x[i - 1]
@@ -127,11 +127,11 @@ def print_table(title, func):
     print("=" * len(title))
     print(f"{'x':>6} {'y(x)':>12}")
     for xi in np.arange(0.1, 2.01, 0.1):
-        yi = func(x_data, y_data, xi)
+        yi = func(X_DATA, Y_DATA, xi)
         print(f"{xi:6.2f} {yi:12.5f}")
     print("\n--- Интерполяция между точками ---")
     for xi in np.arange(0.15, 1.96, 0.2):
-        yi = func(x_data, y_data, xi)
+        yi = func(X_DATA, Y_DATA, xi)
         print(f"{xi:6.2f} {yi:12.5f}")
 
 
@@ -190,25 +190,25 @@ print_table("Интерполяция полиномом Ньютона", newton
 print_table("Аппроксимация методом наименьших квадратов",
             lambda x, y, xi: mnk_quadratic(x, y, xi)[0])
 
-_, (coeff_0, coeff_1, coeff_2) = mnk_quadratic(x_data, y_data, 0)
+_, (coeff_0, coeff_1, coeff_2) = mnk_quadratic(X_DATA, Y_DATA, 0)
 print(f"\nКоэффициенты МНК: c0 = {coeff_0:.6f}, c1 = {coeff_1:.6f}, c2 = {coeff_2:.6f}")
 
 
 xq_vals = np.linspace(0.1, 2.0, 300)
 
-lag_sci = lagrange(x_data, y_data)
-spl_sci = CubicSpline(x_data, y_data)
-coef_mnk = np.polyfit(x_data, y_data, 2)
+lag_sci = lagrange(X_DATA, Y_DATA)
+spl_sci = CubicSpline(X_DATA, Y_DATA)
+coef_mnk = np.polyfit(X_DATA, Y_DATA, 2)
 
 methods = {
-    "Полином Лагранжа": [lambda xi: lagrange_interp(x_data, y_data, xi),
+    "Полином Лагранжа": [lambda xi: lagrange_interp(X_DATA, Y_DATA, xi),
                          lambda xi: lag_sci(xi), 'r'],
-    "Кубический сплайн": [lambda xi: spline_interp(x_data, y_data, xi),
+    "Кубический сплайн": [lambda xi: spline_interp(X_DATA, Y_DATA, xi),
                           lambda xi: spl_sci(xi), 'b'],
-    "Полином Ньютона": [lambda xi: newton_interp(x_data, y_data, xi),
+    "Полином Ньютона": [lambda xi: newton_interp(X_DATA, Y_DATA, xi),
                         None, 'g'],
     "МНК (квадратичная аппроксимация)": [
-        lambda xi: mnk_quadratic(x_data, y_data, xi)[0],
+        lambda xi: mnk_quadratic(X_DATA, Y_DATA, xi)[0],
         lambda xi: np.polyval(coef_mnk, xi), 'm'
     ]
 }
@@ -218,7 +218,7 @@ for name, (manual, builtin, color) in methods.items():
     y_builtin = [builtin(xi) for xi in xq_vals] if builtin else None
 
     plt.figure(figsize=(10, 6))
-    plt.scatter(x_data, y_data, color='black', label='Исходные точки', zorder=5, s=40)
+    plt.scatter(X_DATA, Y_DATA, color='black', label='Исходные точки', zorder=5, s=40)
     plt.plot(xq_vals, y_manual, color=color, linewidth=2, label=f'{name} (ручной)')
     if builtin:
         plt.plot(xq_vals, y_builtin, color=color, linestyle='--',
