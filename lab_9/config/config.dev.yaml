@@ -1,0 +1,25 @@
+defaults:
+  - config.yaml
+
+logging:
+  level: "DEBUG"
+  console:
+    level: "DEBUG"
+  file:
+    general_log:
+      level: "DEBUG"
+    error_log:
+      level: "ERROR"
+
+csv:
+  encoding: "utf-16"
+
+performance:
+  log_progress_interval: 10
+  validate_all_fields: false
+
+testing:
+  enabled: true
+  sample_data:
+    - ["test@email.com", "200 OK", "123456789012", "12 34 567890", "192.168.1.1", "45.5", "#FF5733", "978-5-93286-100-8", "123e4567-e89b-12d3-a456-426614174000", "12:30:45"]
+    - ["invalid-email", "200 OK", "123456789012", "12 34 567890", "192.168.1.1", "45.5", "#FF5733", "978-5-93286-100-8", "123e4567-e89b-12d3-a456-426614174000", "12:30:45"]
