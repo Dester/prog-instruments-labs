@@ -7,16 +7,12 @@ from checksum import calculate_checksum, serialize_result
 
 
 class TestCSVValidator:
-    """Тесты для класса CSVValidator"""
-
     @pytest.fixture
     def validator(self):
-        """Фикстура для создания экземпляра валидатора"""
         return CSVValidator("test.csv")
 
     # Тест 1: Проверка инициализации
     def test_initialization(self, validator):
-        """Тест корректной инициализации валидатора"""
         assert validator.filename == "test.csv"
         assert validator.row_numbers == []
         assert len(validator.patterns) == 10
@@ -40,7 +36,6 @@ class TestCSVValidator:
         ],
     )
     def test_email_validation(self, validator, email, expected):
-        """Параметризованный тест валидации email"""
         assert validator.validate_email(email) == expected
 
     # Тест 3: Параметризованный тест для IP-адресов
@@ -63,12 +58,10 @@ class TestCSVValidator:
         ],
     )
     def test_ip_validation(self, validator, ip, expected):
-        """Параметризованный тест валидации IP-адресов"""
         assert validator.validate_ip(ip) == expected
 
     # Тест 4: Тест с моком для validate_latitude (обработка исключения)
     def test_latitude_validation_with_exception_mock(self, validator):
-        """Тест валидации широты с моком для имитации исключения"""
         with patch("builtins.float", side_effect=ValueError("Invalid conversion")):
             result = validator.validate_latitude("not_a_number")
             assert result is False
@@ -87,7 +80,6 @@ class TestCSVValidator:
         ],
     )
     def test_uuid_validation(self, validator, uuid_value, expected):
-        """Параметризованный тест валидации UUID"""
         assert validator.validate_uuid(uuid_value) == expected
 
     # Тест 6: Параметризованный тест для времени
@@ -108,12 +100,10 @@ class TestCSVValidator:
         ],
     )
     def test_time_validation(self, validator, time_str, expected):
-        """Параметризованный тест валидации времени"""
         assert validator.validate_time(time_str) == expected
 
     # Тест 7: Тест с моком для validate_row
     def test_validate_row_with_mocks(self, validator):
-        """Тест валидации строки с использованием моков"""
         validator.validate_email = MagicMock(return_value=True)
         validator.validate_http_status = MagicMock(return_value=True)
         validator.validate_inn = MagicMock(return_value=True)
@@ -164,16 +154,14 @@ class TestCSVValidator:
         ],
     )
     def test_latitude_validation(self, validator, latitude, expected):
-        """Параметризованный тест валидации широты"""
         assert validator.validate_latitude(latitude) == expected
 
-    # Тест 9: Тест с моком для process_file (С ГЕНЕРАТОРОМ)
+    # Тест 9: Тест с моком для process_file
     @patch("csv.reader")
     @patch("builtins.open", new_callable=mock_open)
     def test_process_file_with_mock_csv_generator(
         self, mock_file, mock_csv_reader, validator
     ):
-        """Тест обработки файла с моком для csv.reader (с генератором)"""
         mock_reader = MagicMock()
 
         mock_reader.__iter__.return_value = iter(
@@ -218,11 +206,10 @@ class TestCSVValidator:
         )
         mock_csv_reader.return_value = mock_reader
 
-        # Создаем генератор, который всегда возвращает значения
         def validate_generator():
-            yield True  # для первой строки
-            yield False  # для второй строки
-            while True:  # для остальных возможных вызовов
+            yield True
+            yield False
+            while True:
                 yield True
 
         gen = validate_generator()
@@ -233,23 +220,18 @@ class TestCSVValidator:
             result = validator.process_file()
 
             assert result == [1]
-            # Проверяем, что было минимум 2 вызова (фактически 3)
             assert mock_validate.call_count >= 2
 
     # Тест 10: Тест обработки исключения при открытии файла
     @patch("builtins.open", side_effect=FileNotFoundError("File not found"))
     def test_process_file_not_found(self, mock_open, validator):
-        """Тест обработки отсутствия файла"""
         with pytest.raises(FileNotFoundError):
             validator.process_file()
 
 
 class TestChecksumFunctions:
-    """Тесты для функций из модуля checksum"""
-
     # Тест 11: Тест calculate_checksum
     def test_calculate_checksum(self):
-        """Тест вычисления контрольной суммы"""
         result1 = calculate_checksum([3, 1, 2])
         result2 = calculate_checksum([1, 2, 3])
         assert result1 == result2
@@ -263,7 +245,6 @@ class TestChecksumFunctions:
     # Тест 12: Тест serialize_result с моком
     @patch("builtins.open", new_callable=mock_open)
     def test_serialize_result(self, mock_file):
-        """Тест сериализации результата"""
         variant = 53
         checksum = "test_checksum_12345"
 
@@ -280,11 +261,8 @@ class TestChecksumFunctions:
 
 
 class TestIntegration:
-    """Интеграционные тесты"""
-
     @pytest.fixture
     def temp_csv_file(self, tmp_path):
-        """Фикстура для создания временного CSV файла"""
         file_path = tmp_path / "test.csv"
         with open(file_path, "w", encoding="utf-16") as f:
             f.write(
@@ -303,7 +281,6 @@ class TestIntegration:
 
     # Тест 13: Интеграционный тест с временным файлом
     def test_integration_with_real_file(self, temp_csv_file):
-        """Интеграционный тест с реальным временным файлом"""
         validator = CSVValidator(temp_csv_file)
         invalid_rows = validator.process_file()
 
@@ -316,7 +293,6 @@ class TestIntegration:
 @patch("main.calculate_checksum")
 @patch("main.CSVValidator")
 def test_main_function(mock_validator_class, mock_calculate, mock_serialize):
-    """Тест основной функции с использованием моков"""
     mock_validator = MagicMock()
     mock_validator.process_file.return_value = [1, 2, 3]
     mock_validator_class.return_value = mock_validator
@@ -330,3 +306,4 @@ def test_main_function(mock_validator_class, mock_calculate, mock_serialize):
     mock_validator.process_file.assert_called_once()
     mock_calculate.assert_called_once_with([1, 2, 3])
     mock_serialize.assert_called_once_with(53, "test_checksum")
+
