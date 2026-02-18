@@ -1,0 +1,25 @@
+defaults:
+  - config.yaml
+
+logging:
+  level: "WARNING"
+  console:
+    level: "WARNING"
+    enabled: true
+  file:
+    general_log:
+      level: "INFO"
+      rotation: "100 MB"
+      retention: "90 days"
+    error_log:
+      level: "ERROR"
+      rotation: "100 MB"
+      retention: "90 days"
+
+performance:
+  log_progress_interval: 10000
+  validate_all_fields: true
+
+security:
+  validate_input_safety: true
+  max_file_size_mb: 100
