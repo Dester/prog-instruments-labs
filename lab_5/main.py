@@ -41,11 +41,8 @@ class CSVValidator:
         logger.info(f"Инициализация валидатора для файла: {filename}")
 
     def setup_logging(self):
-        """Настройка конфигурации логирования"""
-        # Удаляем стандартный обработчик
         logger.remove()
 
-        # Логи в консоль с цветным выводом
         logger.add(
             sys.stdout,
             format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
@@ -53,11 +50,9 @@ class CSVValidator:
             colorize=True,
         )
 
-        # Логи в файл с ротацией
         log_dir = Path("logs")
         log_dir.mkdir(exist_ok=True)
 
-        # Файл для всех логов
         logger.add(
             log_dir / "validator_{time:YYYY-MM-DD}.log",
             format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
@@ -67,7 +62,6 @@ class CSVValidator:
             compression="zip",
         )
 
-        # Отдельный файл только для ошибок
         logger.add(
             log_dir / "errors_{time:YYYY-MM-DD}.log",
             format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {name}:{function}:{line} - {message}",
@@ -208,7 +202,6 @@ class CSVValidator:
 
                     processed_rows += 1
 
-                    # Логируем прогресс каждые 1000 строк
                     if processed_rows % 1000 == 0:
                         logger.info(
                             f"Обработано {processed_rows} строк. Найдено невалидных: {len(self.row_numbers)}"
@@ -231,7 +224,6 @@ class CSVValidator:
 def main():
     VARIANT = 53
 
-    # Добавляем логирование для основного блока
     logger.info(f"Запуск валидатора для варианта {VARIANT}")
 
     try:
@@ -255,3 +247,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
