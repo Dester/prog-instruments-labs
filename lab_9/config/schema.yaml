@@ -1,0 +1,59 @@
+app:
+  name: str
+  version: str
+  description: str
+
+variant:
+  number: int
+  csv_file: str
+  result_file: str
+
+csv:
+  delimiter: str
+  encoding: str
+  quote_char: str
+  skip_header: bool
+  header_row: int
+
+logging:
+  version: int
+  level: enum("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+  console:
+    enabled: bool
+    format: str
+    colorize: bool
+    level: optional(enum("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"))
+  file:
+    enabled: bool
+    directory: str
+    general_log:
+      filename: str
+      format: str
+      level: enum("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+      rotation: str
+      retention: str
+      compression: str
+    error_log:
+      filename: str
+      format: str
+      level: enum("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL")
+      rotation: str
+      retention: str
+
+validation_patterns:
+  email: str
+  http_status_message: str
+  inn: str
+  passport: str
+  ip_v4: str
+  latitude: str
+  hex_color: str
+  isbn: str
+  uuid: str
+  time: str
+
+columns_order: list(str)
+
+performance:
+  log_progress_interval: int
+  validate_all_fields: bool
